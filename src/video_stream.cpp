@@ -127,6 +127,16 @@ int main(int argc, char** argv)
     _nh.param("flip_vertical", flip_vertical, false);
     ROS_INFO_STREAM("Flip vertical image is: " << ((flip_vertical)?"true":"false"));
 
+    int rotate;
+    _nh.param("rotate", rotate, 0);
+    ROS_INFO_STREAM("Rotate image is: " << rotate);
+
+    bool rotate_cw;
+    if (rotate == 1){
+        _nh.param("rotate_cw", rotate_cw, false);
+        ROS_INFO_STREAM("Rotate clockwise is: " << ((rotate_cw)?"true":"false"));
+    }
+
     int width_target;
     int height_target;
     _nh.param("width", width_target, 0);
@@ -162,6 +172,7 @@ int main(int argc, char** argv)
     ROS_INFO_STREAM("Opened the stream, starting to publish.");
 
     cv::Mat frame;
+    cv::Mat dst;
     sensor_msgs::ImagePtr msg;
     sensor_msgs::CameraInfo cam_info_msg;
     std_msgs::Header header;
@@ -176,6 +187,14 @@ int main(int argc, char** argv)
         if (pub.getNumSubscribers() > 0){
             // Check if grabbed frame is actually full with some content
             if(!frame.empty()) {
+                //check rotation
+                if (rotate){
+                    cv::transpose(frame, frame);
+                    if (rotate_cw)
+                        cv::flip(frame, frame, 1);
+                    else
+                        cv::flip(frame, frame, 0);
+                }
                 // Flip the image if necessary
                 if (flip_image)
                     cv::flip(frame, frame, flip_value);
